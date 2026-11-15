@@ -1,0 +1,12 @@
+{
+  "name": "bibliotech",
+  "version": "1.0.0",
+  "description": "BiblioTech - PoC da jornada de circulação (balcão) - Projeto Integrador SENAC EAD",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --no-warnings backend/server.js",
+    "test": "node --no-warnings --test backend/tests/negocio.test.js backend/tests/acervo.test.js backend/tests/leitores.test.js backend/tests/seguranca.test.js"
+  }
+}

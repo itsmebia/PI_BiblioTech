@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BiblioTech</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Tela de login -->
+  <section id="tela-login" class="login">
+    <form id="form-login" class="card login-card">
+      <h1 class="marca">Biblio<em>Tech</em></h1>
+      <p class="sub">Sistema de Gestão de Bibliotecas Escolares</p>
+      <label>Usuário
+        <input id="login-usuario" autocomplete="username" maxlength="50" required>
+      </label>
+      <label>Senha
+        <input id="login-senha" type="password" autocomplete="current-password" maxlength="200" required>
+      </label>
+      <p id="login-erro" class="erro" role="alert"></p>
+      <button class="btn" type="submit">Entrar</button>
+    </form>
+  </section>
+
+  <!-- Aplicação (visível só depois do login) -->
+  <div id="app" hidden>
+    <header class="topo">
+      <h1 class="marca">Biblio<em>Tech</em></h1>
+      <nav aria-label="Seções">
+        <button type="button" data-aba="painel" class="ativo">Painel</button>
+        <button type="button" data-aba="balcao">Balcão</button>
+        <button type="button" data-aba="acervo">Acervo</button>
+        <button type="button" data-aba="leitores">Leitores</button>
+      </nav>
+      <span id="operadora"></span>
+      <button type="button" id="sair" class="btn-link">Sair</button>
+    </header>
+
+    <main>
+      <p id="aviso" class="aviso" role="status" hidden></p>
+
+      <section id="aba-painel">
+        <h2>Painel inicial</h2>
+        <div id="indicadores" class="indicadores"></div>
+        <h3>Usuários em atraso</h3>
+        <div class="tabela-wrap"><table id="tabela-atrasos"></table></div>
+      </section>
+
+      <section id="aba-balcao" hidden>
+        <h2>Atendimento no balcão</h2>
+        <form id="form-usuario" class="busca">
+          <input id="busca-usuario" maxlength="60" placeholder="Buscar aluno por nome ou matrícula" aria-label="Buscar usuário">
+          <button class="btn" type="submit">Buscar</button>
+        </form>
+        <div id="resultado-usuarios"></div>
+        <div id="ficha" class="card" hidden></div>
+      </section>
+
+      <section id="aba-acervo" hidden>
+        <div class="cabecalho-secao">
+          <h2>Acervo</h2>
+          <button type="button" id="nova-obra" class="btn">+ Nova obra</button>
+        </div>
+        <div id="cadastro-obra"></div>
+        <form id="form-obra" class="busca">
+          <input id="busca-obra" maxlength="60" placeholder="Título, autor, ISBN ou gênero" aria-label="Buscar obra">
+          <select id="filtro-genero" aria-label="Filtrar por gênero"><option value="">Todos os gêneros</option></select>
+          <button class="btn" type="submit">Buscar</button>
+        </form>
+        <label class="filtro-check"><input type="checkbox" id="so-disponiveis"> Mostrar só obras com exemplar disponível</label>
+        <p id="contagem-obras" class="sub"></p>
+        <div id="resultado-obras"></div>
+      </section>
+
+      <section id="aba-leitores" hidden>
+        <div class="cabecalho-secao">
+          <h2>Leitores</h2>
+          <button type="button" id="novo-leitor" class="btn">+ Novo leitor</button>
+        </div>
+        <div id="cadastro-leitor"></div>
+        <form id="form-leitores" class="busca">
+          <input id="busca-leitor" maxlength="60" placeholder="Buscar por nome ou matrícula" aria-label="Buscar leitor">
+          <button class="btn" type="submit">Buscar</button>
+        </form>
+        <p id="contagem-leitores" class="sub"></p>
+        <div id="resultado-leitores"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Recibo do empréstimo -->
+  <div id="recibo" class="modal" role="dialog" aria-modal="true" aria-labelledby="recibo-titulo" hidden>
+    <div class="card recibo">
+      <h3 id="recibo-titulo">Empréstimo confirmado ✔</h3>
+      <dl id="recibo-dados"></dl>
+      <button type="button" class="btn" id="fechar-recibo">Fechar</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
