@@ -115,10 +115,9 @@ curl -b cookie.txt -X POST http://localhost:3000/api/logout -H "Content-Type: ap
 
 ## Integrantes
 Beatriz de Santana Monteiro · Eduarda Athayde Alves · Ester Neves da Silva · Laila Marina Souza Araujo · Pietra Carozzo Sena Carvalho
-(o histórico de contribuições de cada membro fica nos commits do repositório).
 
 ## Vídeo de demonstração
-_(colar aqui o link do vídeo de até 1 minuto antes da entrega)_
+https://youtu.be/b0PZL4hVTko?si=erO4YI-AUodYyAdj
 
 ## Fora do escopo da PoC (próximas etapas)
 Renovação e reserva, relatórios exportáveis, autoatendimento do aluno, notificações, PWA (aplicativo instalável), adequação completa à LGPD.
