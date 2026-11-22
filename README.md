@@ -13,20 +13,20 @@ login → painel com usuários em atraso → busca do aluno (status ativo/suspen
 **Regras de negócio validadas**
 - Limite de obras por perfil (aluno 2 · professor 5) e prazo por perfil (7 e 15 dias).
 - Exemplar indisponível não pode ser emprestado (regra na aplicação **e** no banco, por índice único).
-- Suspensão automática: 1 dia por dia de atraso, sem multa financeira.
+- Suspensão automática ao devolver com atraso: 1 dia de suspensão por dia de atraso (ex.: 3 dias de atraso → suspenso até 3 dias depois da devolução, inclusive), sem multa financeira. A suspensão é aplicada no registro da devolução: enquanto o livro atrasado não volta, o painel o lista em atraso, mas o leitor ainda pode pegar outras obras dentro do limite do perfil.
 - Obra ou exemplar com histórico de empréstimos não pode ser apagado (preserva o registro); para retirar de circulação, usa-se "Em Manutenção".
 - Leitor com histórico de empréstimos não pode ser excluído; matrícula é única; aluno exige turma; ninguém vira administrador pela API; trocar de perfil não pode deixar o leitor acima do novo limite de obras.
-- ISBN único e validado (10 ou 13 dígitos); exemplar emprestado não muda de status manualmente.
+- ISBN único, com formato validado (10 ou 13 dígitos; o dígito verificador não é conferido nesta PoC); exemplar emprestado não muda de status manualmente.
 - Empréstimo/devolução são atômicos: o registro e o status do exemplar mudam juntos ou não mudam.
 
 ## Stack
 | Camada | Tecnologia |
 |---|---|
-| Frontend | HTML5 + CSS3 + JavaScript (módulos ES), responsivo, com a identidade visual do projeto (paleta #5D2410 · #EDE1D1 · #7F6044 · #412E27; fontes Lora e Poppins) |
-| Backend | Node.js 22 — API REST com `node:http` |
-| Banco de dados | SQLite (`node:sqlite`, embutido no Node) |
-| Testes | `node:test` — 42 testes de integração (negócio, acervo e segurança) |
-| Dependências externas | **nenhuma** (reduz a superfície de ataque e dispensa `npm install`) |
+| Frontend | HTML5 + CSS3 + JavaScript (módulos ES), responsivo, com a identidade visual do projeto (paleta #5D2410 · #EDE1D1 · #7F6044 · #412E27; fontes Lora e Poppins, carregadas do Google Fonts: precisam de internet, e sem ela o navegador usa fontes padrão) |
+| Backend | Node.js 22.13 ou superior — API REST com `node:http` |
+| Banco de dados | SQLite (`node:sqlite`, embutido no Node; módulo ainda marcado como experimental no Node 22, e por isso o `npm start` usa `--no-warnings`) |
+| Testes | `node:test` — 42 testes de integração (negócio, acervo, leitores e segurança) |
+| Dependências externas | **nenhuma biblioteca npm** (reduz a superfície de ataque e dispensa `npm install`) |
 
 ## Arquitetura
 ```
@@ -48,12 +48,12 @@ backend/
 └── tests/               negocio · acervo · leitores · seguranca
 frontend/
 ├── index.html · style.css
-└── js/                  main · api · dom · avisos · telas/(painel, balcao, acervo)
+└── js/                  main · api · dom · avisos · telas/(painel, balcao, acervo, leitores)
 ```
 Modelo de dados: `usuarios` · `obras` (1) ─ (N) `exemplares` · `emprestimos` (usuário × exemplar).
 
 ## Como executar
-Requisito: **Node.js 22.5 ou superior**. Não é preciso instalar nada.
+Requisito: **Node.js 22.13 ou superior** (a partir dessa versão o `node:sqlite` dispensa a flag `--experimental-sqlite`; em versões anteriores o `npm start` falha). Não é preciso instalar mais nada.
 ```bash
 git clone https://github.com/itsmebia/PI_BiblioTech.git
 cd PI_BiblioTech
@@ -78,11 +78,11 @@ Para recomeçar a demonstração do zero, apague `backend/bibliotech.db` e reini
 | Risco | O que foi feito | Onde |
 |---|---|---|
 | **A01** Controle de acesso | Toda rota da API exige sessão de administradora (negação por padrão); proteção anti-CSRF em 3 camadas (cookie `SameSite=Strict`, checagem de `Sec-Fetch-Site`, exigência de JSON); arquivos estáticos protegidos contra *path traversal* | `app.js`, `http/estaticos.js` |
-| **A02** Falhas criptográficas | Senhas com **scrypt + sal** e comparação em tempo constante; token de sessão de 256 bits guardado só como hash; cookie `HttpOnly` + `Secure`; nenhum segredo no código; HSTS sob HTTPS | `seguranca/senhas.js`, `sessoes.js` |
+| **A02** Falhas criptográficas | Senhas com **scrypt + sal** e comparação em tempo constante; token de sessão de 256 bits guardado só como hash; cookie `HttpOnly` (e `Secure` quando a conexão é HTTPS); nenhum segredo no código; HSTS sob HTTPS | `seguranca/senhas.js`, `sessoes.js` |
 | **A03** Injeção | 100% das consultas SQL parametrizadas; validação de tipo/tamanho de toda entrada; curingas do `LIKE` escapados; frontend sem `innerHTML` (anti-XSS) + CSP | `seguranca/validacao.js`, `db/`, `frontend/js/dom.js` |
 | **A04** Design inseguro | Limite de tamanho do corpo, de resultados e de tentativas de login; regras de negócio e integridade garantidas também no banco (`CHECK`, `UNIQUE`, chave estrangeira); transações atômicas | `config.js`, `db/esquema.js` |
 | **A05** Configuração insegura | CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; API com `Cache-Control: no-store`; erros genéricos (sem *stack trace*); senha padrão proibida em produção; *timeouts* anti-Slowloris | `seguranca/cabecalhos.js`, `app.js` |
-| **A06** Componentes vulneráveis | Zero dependências de terceiros; versão do Node fixada em `engines` | `package.json` |
+| **A06** Componentes vulneráveis | Zero dependências de terceiros; versão mínima do Node declarada em `engines` | `package.json` |
 | **A07** Falhas de autenticação | Bloqueio após 5 falhas (por IP + usuário); mensagem idêntica para usuário inexistente e senha errada, com tempo de resposta igualado; expiração de sessão (8 h); logout invalida no servidor | `servicos/autenticacao.js`, `seguranca/limitador.js` |
 | **A08** Integridade de software/dados | Sem *scripts* de terceiros (CSP `script-src 'self'`); sem desserialização insegura (só `JSON.parse` validado) | `seguranca/cabecalhos.js` |
 | **A09** Registro e monitoramento | Log em JSON de logins (sucesso, falha, bloqueio), empréstimos e devoluções — sem registrar senhas ou tokens | `log.js` |
@@ -106,9 +106,19 @@ Limitações assumidas por ser uma PoC (e como evoluir): sessões em memória (e
 | POST | `/api/emprestimos` | Registra empréstimo `{usuario_id, exemplar_id}` |
 | POST | `/api/emprestimos/:id/devolucao` | Registra devolução (aplica suspensão se houver atraso) |
 
+**Ao testar fora da tela (curl, Postman):** toda requisição que altera dados (POST, PUT, PATCH e DELETE), mesmo sem corpo, precisa enviar `Content-Type: application/json`; sem isso a API responde 415 (é uma das camadas anti-CSRF). Quando não há dados, envie o corpo `{}`. A sessão vai no cookie:
+```bash
+curl -c cookie.txt -X POST http://localhost:3000/api/login -H "Content-Type: application/json" -d '{"matricula":"marta","senha":"bibliotech123"}'
+curl -b cookie.txt http://localhost:3000/api/dashboard
+curl -b cookie.txt -X POST http://localhost:3000/api/logout -H "Content-Type: application/json" -d '{}'
+```
+
 ## Integrantes
 Beatriz de Santana Monteiro · Eduarda Athayde Alves · Ester Neves da Silva · Laila Marina Souza Araujo · Pietra Carozzo Sena Carvalho
 (o histórico de contribuições de cada membro fica nos commits do repositório).
 
+## Vídeo de demonstração
+_(colar aqui o link do vídeo de até 1 minuto antes da entrega)_
+
 ## Fora do escopo da PoC (próximas etapas)
-Renovação e reserva, relatórios exportáveis, autoatendimento do aluno, notificações, adequação completa à LGPD.
+Renovação e reserva, relatórios exportáveis, autoatendimento do aluno, notificações, PWA (aplicativo instalável), adequação completa à LGPD.
